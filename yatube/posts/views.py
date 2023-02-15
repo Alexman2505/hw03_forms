@@ -18,8 +18,7 @@ def post_create(request):
             post.author = request.user
             post.save()
             return redirect('posts:profile', request.user)
-    else:
-        form = PostForm()
+    form = PostForm()
     return render(
         request,
         'posts/create_post.html',
@@ -79,14 +78,12 @@ def profile(request, username):
     paginator = Paginator(posts, settings.NUMBER_OF_POSTS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    posts_count = posts.count()
     return render(
         request,
         'posts/profile.html',
         {
             'page_obj': page_obj,
             'author': author,
-            'posts_count': posts_count,
         },
     )
 
@@ -94,13 +91,4 @@ def profile(request, username):
 # Отдельная запись
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    posts = Post.objects.filter(author__username=post.author.username)
-    posts_count = posts.count()
-    return render(
-        request,
-        'posts/post_detail.html',
-        {
-            'post': post,
-            'posts_count': posts_count,
-        },
-    )
+    return render(request, 'posts/post_detail.html', {'post': post})
