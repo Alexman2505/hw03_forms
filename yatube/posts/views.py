@@ -1,11 +1,9 @@
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
-
 
 from .models import Group, Post, User
 from .forms import PostForm
+from .utils import make_page
 
 
 # Создание поста под авторизацией
@@ -49,23 +47,19 @@ def post_edit(request, post_id):
 # Главная страница
 def index(request):
     posts = Post.objects.select_related('group', 'author')
-    paginator = Paginator(posts, settings.NUMBER_OF_POSTS)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'posts/index.html', {'page_obj': page_obj})
+    return render(
+        request, 'posts/index.html', {'page_obj': make_page(request, posts)}
+    )
 
 
 # Страница групп
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.select_related('author')
-    paginator = Paginator(posts, settings.NUMBER_OF_POSTS)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
     return render(
         request,
         'posts/group_list.html',
-        {'group': group, 'page_obj': page_obj},
+        {'group': group, 'page_obj': make_page(request, posts)},
     )
 
 
@@ -75,15 +69,12 @@ def profile(request, username):
     posts = Post.objects.select_related('group', 'author').filter(
         author__username=username
     )
-    paginator = Paginator(posts, settings.NUMBER_OF_POSTS)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
     return render(
         request,
         'posts/profile.html',
         {
-            'page_obj': page_obj,
             'author': author,
+            'page_obj': make_page(request, posts),
         },
     )
 
