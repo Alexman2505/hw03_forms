@@ -23,29 +23,13 @@ class PostURLTests(TestCase):
             author = cls.user_author,
             group=cls.group
         )
-        cls.status_code_url_names = {
-            '/': HTTPStatus.OK,
-            f'/group/{cls.group.slug}/': HTTPStatus.OK,
-            f'/profile/{cls.post.author.username}/': HTTPStatus.OK,
-            f'/posts/{cls.post.pk}/':HTTPStatus.OK,
-            f'/posts/{cls.post.pk}/edit/':HTTPStatus.FOUND,
-            '/create/': HTTPStatus.FOUND,
-            '/unexisting_page/': HTTPStatus.NOT_FOUND
-        }
-        #Словарь для проверки существования шаблонов
-        cls.templates_url_names = {
-            '/': 'posts/index.html',
-            f'/group/{cls.group.slug}/': 'posts/group_list.html',
-            f'/profile/{cls.post.author.username}/': 'posts/profile.html',
-            f'/posts/{cls.post.pk}/':'posts/post_detail.html',
-            '/create/': 'posts/create_post.html',
-            f'/posts/{cls.post.pk}/edit/': 'posts/create_post.html',
-        }
 
     def setUp(self):
         self.guest_client = Client()
+
         self.authorized_client = Client()
         self.authorized_client.force_login(PostURLTests.user_auth)
+
         self.author_client = Client()
         self.author_client.force_login(PostURLTests.user_author)
 
@@ -78,7 +62,16 @@ class PostURLTests(TestCase):
 
     def test_url_exists_at_desired_location(self):
         """Проверка страниц, доступных без авторизации"""
-        for address, status_code in self.status_code_url_names.items():
+        status_code_url_names = {
+            '/': HTTPStatus.OK,
+            f'/group/{self.group.slug}/': HTTPStatus.OK,
+            f'/profile/{self.post.author.username}/': HTTPStatus.OK,
+            f'/posts/{self.post.pk}/':HTTPStatus.OK,
+            f'/posts/{self.post.pk}/edit/':HTTPStatus.FOUND,
+            '/create/': HTTPStatus.FOUND,
+            '/unexisting_page/': HTTPStatus.NOT_FOUND
+        }
+        for address, status_code in status_code_url_names.items():
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code,status_code)
@@ -86,7 +79,15 @@ class PostURLTests(TestCase):
     # Проверка вызываемых шаблонов для каждого адреса
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        for address, template in self.templates_url_names.items():
+        templates_url_names = {
+            '/': 'posts/index.html',
+            f'/group/{self.group.slug}/': 'posts/group_list.html',
+            f'/profile/{self.post.author.username}/': 'posts/profile.html',
+            f'/posts/{self.post.pk}/':'posts/post_detail.html',
+            '/create/': 'posts/create_post.html',
+            f'/posts/{self.post.pk}/edit/': 'posts/create_post.html',
+        }
+        for address, template in templates_url_names.items():
             with self.subTest(address=address):
                 response = self.author_client.get(address)
                 self.assertTemplateUsed(response,template)
